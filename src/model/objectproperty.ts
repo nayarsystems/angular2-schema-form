@@ -29,6 +29,10 @@ export class ObjectProperty extends PropertyGroup {
   }
 
   reset(value: any, onlySelf = true) {
+    if (value) {
+      let me: any = this;
+      me._modelValue = value;
+    }
     value = value || this.schema.default || {};
     this.resetProperties(value);
     this.updateValueAndValidity(onlySelf, true);
@@ -38,6 +42,8 @@ export class ObjectProperty extends PropertyGroup {
     for (let propertyId in this.schema.properties) {
       if (this.schema.properties.hasOwnProperty(propertyId)) {
         this.properties[propertyId].reset(value[propertyId], true);
+        let prop: any = this.properties[propertyId];
+        prop._modelValue = value[propertyId];
       }
     }
   }

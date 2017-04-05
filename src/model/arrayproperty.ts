@@ -54,6 +54,10 @@ export class ArrayProperty extends PropertyGroup {
   }
 
   reset(value: any, onlySelf = true) {
+    if (value) {
+      let me: any = this;
+      me._modelValue = value;
+    }
     value = value || this.schema.default || [];
     this.properties = [];
     this.resetProperties(value);
@@ -64,12 +68,13 @@ export class ArrayProperty extends PropertyGroup {
     this.properties = [];
   }
 
-
   private resetProperties(value: any) {
     for (let idx in value) {
       if (value.hasOwnProperty(idx)) {
         let property = this.addProperty();
         property.reset(value[idx], true);
+        let prop: any = property;
+        prop._modelValue = value[idx];
       }
     }
   }

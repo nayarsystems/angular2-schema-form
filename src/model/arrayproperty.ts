@@ -17,13 +17,26 @@ export class ArrayProperty extends PropertyGroup {
   }
 
   addItem(value: any = null): FormProperty {
-    let newProperty = this.addProperty();
+    let newPropSchema: any = {type: "string", widget:{id:"string"}};
+    if (this.schema.items instanceof Array) {
+      let items: Array<Object> = this.schema.items;
+      let props = (<FormProperty[]>this.properties);
+      if (props.length >= items.length) {
+        return null;
+      }
+      newPropSchema = items[props.length];
+    } else if (this.schema.items instanceof Object) {
+      newPropSchema = this.schema.items;
+    }
+
+    console.log("ADDING:", newPropSchema);
+    let newProperty = this.addProperty(newPropSchema);
     newProperty.reset(value, false);
     return newProperty;
   }
 
-  private addProperty() {
-    let newProperty = this.formPropertyFactory.createProperty(this.schema.items, this);
+  private addProperty(schema: any) {
+    let newProperty = this.formPropertyFactory.createProperty(schema, this);
     (<FormProperty[]>this.properties).push(newProperty);
     return newProperty;
   }
@@ -71,10 +84,12 @@ export class ArrayProperty extends PropertyGroup {
   private resetProperties(value: any) {
     for (let idx in value) {
       if (value.hasOwnProperty(idx)) {
-        let property = this.addProperty();
-        property.reset(value[idx], true);
-        let prop: any = property;
-        prop._modelValue = value[idx];
+        let property = this.addItem(value[idx]);
+        if (property != null) {
+          //property.reset(value[idx], true);
+          let prop: any = property;
+          prop._modelValue = value[idx];
+        }
       }
     }
   }

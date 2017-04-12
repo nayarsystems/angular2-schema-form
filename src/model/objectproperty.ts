@@ -86,7 +86,6 @@ export class ObjectProperty extends PropertyGroup {
   }
 
   resetProperties(value: any) {
-    console.log("resetProperties", value);
     for (let prop in this.properties) {
       if (prop in value) {
         this.properties[prop].reset(value[prop], false);

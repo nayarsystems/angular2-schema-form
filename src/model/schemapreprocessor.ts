@@ -114,6 +114,10 @@ export class SchemaPreprocessor {
   private static checkItems(jsonSchema, path) {
     if (jsonSchema.items === undefined) {
       schemaError('No \'items\' property in array', path);
+    } else if (jsonSchema.items instanceof Array) {
+      for (let item of jsonSchema.items) {
+        this.preprocess(item, path+'/*');
+      }
     }
   }
 

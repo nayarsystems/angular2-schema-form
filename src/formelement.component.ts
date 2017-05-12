@@ -72,6 +72,7 @@ export class FormElementComponent implements OnInit {
     let id = 'field' + (FormElementComponent.counter++);
 
     this.widget.formProperty = this.formProperty;
+    this.formProperty.widget = this.widget;
     this.widget.schema = this.formProperty.schema;
     this.widget.name = id;
     this.widget.id = id;

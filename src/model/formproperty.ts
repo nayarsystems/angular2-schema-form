@@ -11,6 +11,7 @@ import { ValidatorRegistry } from './validatorregistry';
 export abstract class FormProperty {
   public schemaValidator: Function;
   public required: boolean;
+  public widget: any;
 
   _value: any = null;
   _errors: any = null ;

@@ -65,7 +65,7 @@ export class SchemaPreprocessor {
           schemaError(`${fieldId} is referenced by more than one fieldset: ${usedFields[fieldId]}`, path);
         }
         delete usedFields[fieldId];
-      } else if (jsonSchema.required.indexOf(fieldId) > -1 ) {
+      } else if (jsonSchema.required && jsonSchema.required.indexOf(fieldId) > -1 ) {
         schemaError(`${fieldId} is a required field but it is not referenced as part of a 'order' or a 'fieldset' property`, path);
       } else {
         delete jsonSchema[fieldId];
@@ -106,13 +106,18 @@ export class SchemaPreprocessor {
 
   private static normalizeRequired(jsonSchema) {
     if (jsonSchema.type === 'object' && jsonSchema.required === undefined) {
-      jsonSchema.required = Object.keys(jsonSchema.properties);
+      //jsonSchema.required = Object.keys(jsonSchema.properties);
+      jsonSchema.required = [];
     }
   }
 
   private static checkItems(jsonSchema, path) {
     if (jsonSchema.items === undefined) {
       schemaError('No \'items\' property in array', path);
+    } else if (jsonSchema.items instanceof Array) {
+      for (let item of jsonSchema.items) {
+        this.preprocess(item, path+'/*');
+      }
     }
   }
 

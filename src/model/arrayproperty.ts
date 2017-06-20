@@ -29,7 +29,6 @@ export class ArrayProperty extends PropertyGroup {
       newPropSchema = this.schema.items;
     }
 
-    console.log("ADDING:", newPropSchema);
     let newProperty = this.addProperty(newPropSchema);
     newProperty.reset(value, false);
     return newProperty;

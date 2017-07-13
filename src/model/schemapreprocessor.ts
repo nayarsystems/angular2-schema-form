@@ -81,7 +81,7 @@ export class SchemaPreprocessor {
   }
 
   private static createFieldsets(jsonSchema) {
-    jsonSchema.order = Object.keys(jsonSchema.properties);
+    jsonSchema.order = Object.keys(jsonSchema.properties).sort();
     SchemaPreprocessor.replaceOrderByFieldsets(jsonSchema);
   }
 

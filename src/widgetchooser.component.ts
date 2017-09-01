@@ -42,9 +42,11 @@ export class WidgetChooserComponent implements OnChanges {
   }
 
   ngOnChanges() {
-    this.ref = this.widgetFactory.createWidget(this.container, this.widgetInfo.id);
-    this.widgetInstanciated.emit(this.ref.instance);
-    this.widgetInstance = this.ref.instance;
-    this.cdr.detectChanges();
+    if (!this.widgetInstance) {
+      this.ref = this.widgetFactory.createWidget(this.container, this.widgetInfo.id);
+      this.widgetInstanciated.emit(this.ref.instance);
+      this.widgetInstance = this.ref.instance;
+      this.cdr.detectChanges();
+    }
   }
 }

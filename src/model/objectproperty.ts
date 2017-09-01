@@ -111,6 +111,9 @@ export class ObjectProperty extends PropertyGroup {
     for (let propertyId in this.schema.properties) {
       if (this.schema.properties.hasOwnProperty(propertyId)) {
         let propertySchema = this.schema.properties[propertyId];
+        if (!("widget" in propertySchema)) {
+            propertySchema["widget"] = { id: propertySchema.type };
+        }
         let property = this.formPropertyFactory.createProperty(propertySchema, this, propertyId);
         this.properties[propertyId] = property;
         this.propertiesId.push(propertyId);

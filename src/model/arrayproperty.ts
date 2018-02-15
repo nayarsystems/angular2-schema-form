@@ -1,18 +1,16 @@
-import { FormProperty, PropertyGroup } from './formproperty';
-import { FormPropertyFactory } from './formpropertyfactory';
-import { SchemaValidatorFactory } from '../schemavalidatorfactory';
-import { ValidatorRegistry } from './validatorregistry';
+import {FormProperty, PropertyGroup} from './formproperty';
+import {FormPropertyFactory} from './formpropertyfactory';
+import {SchemaValidatorFactory} from '../schemavalidatorfactory';
+import {ValidatorRegistry} from './validatorregistry';
 
 export class ArrayProperty extends PropertyGroup {
 
-  constructor(
-    private formPropertyFactory: FormPropertyFactory,
-    schemaValidatorFactory: SchemaValidatorFactory,
-    validatorRegistry: ValidatorRegistry,
-    schema: any,
-    parent: PropertyGroup,
-    path: string
-  ) {
+  constructor(private formPropertyFactory: FormPropertyFactory,
+              schemaValidatorFactory: SchemaValidatorFactory,
+              validatorRegistry: ValidatorRegistry,
+              schema: any,
+              parent: PropertyGroup,
+              path: string) {
     super(schemaValidatorFactory, validatorRegistry, schema, parent, path);
   }
 
@@ -51,14 +49,18 @@ export class ArrayProperty extends PropertyGroup {
     this.updateValueAndValidity(onlySelf, true);
   }
 
+  public _hasValue(): boolean {
+    return true;
+  }
+
   public _updateValue() {
     this.reduceValue();
   }
 
   private reduceValue(): void {
-    let value = [];
+    const value = [];
     this.forEachChild((property, _) => {
-      if (property.visible) {
+      if (property.visible && property._hasValue()) {
         value.push(property.value);
       }
     });
@@ -92,5 +94,4 @@ export class ArrayProperty extends PropertyGroup {
       }
     }
   }
-
 }

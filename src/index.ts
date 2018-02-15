@@ -1,10 +1,10 @@
 export { FormComponent } from './form.component';
 export { FormElementComponent } from './formelement.component';
+export {FormElementComponentAction} from './formelement.action.component'
 export { WidgetChooserComponent } from './widgetchooser.component';
 export { WidgetRegistry } from './widgetregistry';
 export { Validator } from './model/validator';
-export { TerminatorService } from './terminator.service';
-
+export { SchemaValidatorFactory, ZSchemaValidatorFactory } from './schemavalidatorfactory';
 export {
     Widget,
     ControlWidget,
@@ -22,6 +22,7 @@ export {
     SelectWidget,
     StringWidget,
     TextAreaWidget,
-    DefaultWidgetRegistry,
+    ButtonWidget,
+    DefaultWidgetRegistry
 } from './defaultwidgets';
 export { SchemaFormModule } from './schema-form.module';

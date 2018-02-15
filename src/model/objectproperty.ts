@@ -7,20 +7,18 @@ export class ObjectProperty extends PropertyGroup {
 
   public propertiesId: string[]= [];
 
-  constructor(
-    private formPropertyFactory: FormPropertyFactory,
-    schemaValidatorFactory: SchemaValidatorFactory,
-    validatorRegistry: ValidatorRegistry,
-    schema: any,
-    parent: PropertyGroup,
-    path: string
-  ) {
+  constructor(private formPropertyFactory: FormPropertyFactory,
+              schemaValidatorFactory: SchemaValidatorFactory,
+              validatorRegistry: ValidatorRegistry,
+              schema: any,
+              parent: PropertyGroup,
+              path: string) {
     super(schemaValidatorFactory, validatorRegistry, schema, parent, path);
     this.createProperties();
   }
 
   setValue(value: any, onlySelf: boolean) {
-    for (let propertyId in value) {
+    for (const propertyId in value) {
       if (value.hasOwnProperty(propertyId)) {
         this.properties[propertyId].setValue(value[propertyId], true);
       }
@@ -108,7 +106,7 @@ export class ObjectProperty extends PropertyGroup {
   createProperties() {
     this.properties = {};
     this.propertiesId = [];
-    for (let propertyId in this.schema.properties) {
+    for (const propertyId in this.schema.properties) {
       if (this.schema.properties.hasOwnProperty(propertyId)) {
         let propertySchema = this.schema.properties[propertyId];
         if (!("widget" in propertySchema)) {
@@ -121,18 +119,34 @@ export class ObjectProperty extends PropertyGroup {
     }
   }
 
+  public _hasValue(): boolean {
+    return !!Object.keys(this.value).length;
+  }
+
   public _updateValue() {
     this.reduceValue();
   }
 
+  public _runValidation() {
+    super._runValidation();
+
+    if (this._errors) {
+      this._errors.forEach(error => {
+        const prop = this.searchProperty(error.path.slice(1));
+        if (prop) {
+          prop.extendErrors(error);
+        }
+      });
+    }
+  }
+
   private reduceValue(): void {
-    let value = {};
+    const value = {};
     this.forEachChild((property, propertyId: string) => {
-      if (property.visible) {
+      if (property.visible && property._hasValue()) {
         value[propertyId] = property.value;
       }
     });
     this._value = value;
   }
-
 }

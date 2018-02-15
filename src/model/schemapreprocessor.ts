@@ -1,4 +1,4 @@
-import { isBlank } from './utils';
+import {isBlank} from './utils';
 
 function formatMessage(message, path) {
   return `Parsing error on ${path}: ${message}`;
@@ -52,7 +52,7 @@ export class SchemaPreprocessor {
     let usedFields = {};
     for (let fieldset of jsonSchema.fieldsets) {
       for (let fieldId of fieldset.fields) {
-        if (usedFields[fieldId] === undefined ) {
+        if (usedFields[fieldId] === undefined) {
           usedFields[fieldId] = [];
         }
         usedFields[fieldId].push(fieldset.id);
@@ -69,7 +69,7 @@ export class SchemaPreprocessor {
         schemaError(`${fieldId} is a required field but it is not referenced as part of a 'order' or a 'fieldset' property`, path);
       } else {
         delete jsonSchema[fieldId];
-          schemaWarning(`Removing unreferenced field ${fieldId}`, path);
+        schemaWarning(`Removing unreferenced field ${fieldId}`, path);
       }
     }
 
@@ -89,6 +89,8 @@ export class SchemaPreprocessor {
     jsonSchema.fieldsets = [{
       id: 'fieldset-default',
       title: jsonSchema.description || '',
+      description: jsonSchema.description || '',
+      name: jsonSchema.name || '',
       fields: jsonSchema.order
     }];
     delete jsonSchema.order;
@@ -129,9 +131,33 @@ export class SchemaPreprocessor {
           SchemaPreprocessor.preprocess(fieldSchema, path + fieldId + '/');
         }
       }
-
+      if (jsonSchema.hasOwnProperty('definitions')) {
+        for (let fieldId in jsonSchema.definitions) {
+          if (jsonSchema.definitions.hasOwnProperty(fieldId)) {
+            let fieldSchema = jsonSchema.definitions[fieldId];
+            SchemaPreprocessor.removeRecursiveRefProperties(fieldSchema, `#/definitions/${fieldId}`);
+            SchemaPreprocessor.preprocess(fieldSchema, path + fieldId + '/');
+          }
+        }
+      }
     } else if (jsonSchema.type === 'array') {
       SchemaPreprocessor.preprocess(jsonSchema.items, path + '*/');
+    }
+  }
+
+  private static removeRecursiveRefProperties(jsonSchema, definitionPath) {
+    // to avoid infinite loop
+    if (jsonSchema.type === 'object') {
+      for (let fieldId in jsonSchema.properties) {
+        if (jsonSchema.properties.hasOwnProperty(fieldId)) {
+          if (jsonSchema.properties[fieldId].$ref
+            && jsonSchema.properties[fieldId].$ref === definitionPath) {
+            delete jsonSchema.properties[fieldId];
+          } else if (jsonSchema.properties[fieldId].type === 'object') {
+            SchemaPreprocessor.removeRecursiveRefProperties(jsonSchema.properties[fieldId], definitionPath);
+          }
+        }
+      }
     }
   }
 }

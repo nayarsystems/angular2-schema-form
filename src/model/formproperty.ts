@@ -1,12 +1,12 @@
-import { Observable } from 'rxjs/Observable';
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import {Observable} from 'rxjs/Observable';
+import {BehaviorSubject} from 'rxjs/BehaviorSubject';
 import 'rxjs/add/observable/combineLatest';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/do';
 import 'rxjs/add/operator/distinctUntilChanged';
 
-import { SchemaValidatorFactory } from '../schemavalidatorfactory';
-import { ValidatorRegistry } from './validatorregistry';
+import {SchemaValidatorFactory} from '../schemavalidatorfactory';
+import {ValidatorRegistry} from './validatorregistry';
 
 export abstract class FormProperty {
   public schemaValidator: Function;
@@ -14,7 +14,7 @@ export abstract class FormProperty {
   public widget: any;
 
   _value: any = null;
-  _errors: any = null ;
+  _errors: any = null;
   private _valueChanges = new BehaviorSubject<any>(null);
   private _errorsChanges = new BehaviorSubject<any>(null);
   private _visible = true;
@@ -23,14 +23,11 @@ export abstract class FormProperty {
   private _parent: PropertyGroup;
   private _path: string;
 
-  constructor(
-    schemaValidatorFactory: SchemaValidatorFactory,
-    private validatorRegistry: ValidatorRegistry,
-    public schema: any,
-
-    parent: PropertyGroup,
-    path: string
-  ) {
+  constructor(schemaValidatorFactory: SchemaValidatorFactory,
+              private validatorRegistry: ValidatorRegistry,
+              public schema: any,
+              parent: PropertyGroup,
+              path: string) {
     this.schemaValidator = schemaValidatorFactory.createValidatorFn(this.schema);
 
     this._parent = parent;
@@ -80,7 +77,7 @@ export abstract class FormProperty {
 
   public abstract setValue(value: any, onlySelf: boolean);
 
-  public abstract reset(value: any, onlySelf: boolean)
+  public abstract reset(value: any, onlySelf: boolean);
 
   public updateValueAndValidity(onlySelf = false, emitEvent = true) {
     this._updateValue();
@@ -98,6 +95,11 @@ export abstract class FormProperty {
   }
 
   /**
+   * @internal
+   */
+  public abstract _hasValue(): boolean;
+
+  /**
    *  @internal
    */
   public abstract _updateValue();
@@ -109,7 +111,7 @@ export abstract class FormProperty {
     let errors = this.schemaValidator(this._value) || [];
     let customValidator = this.validatorRegistry.get(this.path);
     if (customValidator) {
-      let customErrors = customValidator(this.value, this, this.findRoot()) ;
+      let customErrors = customValidator(this.value, this, this.findRoot());
       errors = this.mergeErrors(errors, customErrors);
     }
     if (errors.length === 0) {
@@ -136,6 +138,11 @@ export abstract class FormProperty {
     this._errorsChanges.next(errors);
   }
 
+  public extendErrors(errors) {
+    errors = this.mergeErrors(this._errors || [], errors);
+    this.setErrors(errors);
+  }
+
   searchProperty(path: string): FormProperty {
     let prop: FormProperty = this;
     let base: PropertyGroup = null;
@@ -155,7 +162,7 @@ export abstract class FormProperty {
 
   public findRoot(): PropertyGroup {
     let property: FormProperty = this;
-    while (property.parent !== null ) {
+    while (property.parent !== null) {
       property = property.parent;
     }
     return <PropertyGroup>property;
@@ -173,7 +180,10 @@ export abstract class FormProperty {
   // A field is visible if AT LEAST ONE of the properties it depends on is visible AND has a value in the list
   public _bindVisibility() {
     let visibleIf = this.schema.visibleIf;
-    if (visibleIf !== undefined) {
+    if (typeof visibleIf === 'object' && Object.keys(visibleIf).length === 0) {
+      this.setVisible(false);
+    }
+    else if (visibleIf !== undefined) {
       let propertiesBinding = [];
       for (let dependencyPath in visibleIf) {
         if (visibleIf.hasOwnProperty(dependencyPath)) {
@@ -183,7 +193,7 @@ export abstract class FormProperty {
               value => {
                 if (visibleIf[dependencyPath].indexOf('$ANY$') !== -1) {
                   return value.length > 0;
-                }else {
+                } else {
                   return visibleIf[dependencyPath].indexOf(value) !== -1;
                 }
               }
@@ -208,11 +218,11 @@ export abstract class FormProperty {
 
 export abstract class PropertyGroup extends FormProperty {
 
-  properties: FormProperty[] | {[key: string]: FormProperty} = null;
+  properties: FormProperty[] | { [key: string]: FormProperty } = null;
 
   getProperty(path: string) {
     let subPathIdx = path.indexOf('/');
-    let propertyId = subPathIdx !== -1 ? path.substr(0, subPathIdx) : path ;
+    let propertyId = subPathIdx !== -1 ? path.substr(0, subPathIdx) : path;
 
     let property = this.properties[propertyId];
     if (property !== null && subPathIdx !== -1 && property instanceof PropertyGroup) {
@@ -245,7 +255,7 @@ export abstract class PropertyGroup extends FormProperty {
     this._bindVisibilityRecursive();
   }
 
-  private _bindVisibilityRecursive () {
+  private _bindVisibilityRecursive() {
     this.forEachChildRecursive((property) => {
       property._bindVisibility();
     });

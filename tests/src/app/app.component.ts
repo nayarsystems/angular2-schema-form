@@ -6,7 +6,7 @@ import {
   WidgetRegistry,
   Validator,
   DefaultWidgetRegistry
-} from './lib';
+} from 'angular2-schema-form';
 
 @Component({
   selector: 'sf-demo-app',
@@ -18,6 +18,7 @@ export class AppComponent {
 
   schema: any;
   model: any;
+  value: any;
   fieldValidators: { [fieldId: string]: Validator } = {};
   actions = {};
 
@@ -31,14 +32,14 @@ export class AppComponent {
       let dateArr = value.split('-');
 
       if (dateArr.length === 3) {
-        let now = new Date();
-        let min = new Date(
+        const now = new Date();
+        const min = new Date(
           now.getFullYear() - 100,
           now.getMonth(),
           now.getDay()
         ).getTime();
-        let max = new Date().getTime();
-        let born = new Date(
+        const max = new Date().getTime();
+        const born = new Date(
           dateArr[0],
           dateArr[1] - 1,
           dateArr[2]
@@ -66,7 +67,7 @@ export class AppComponent {
           let validYear = new Date().getFullYear() - 17;
 
           try {
-            let actualYear = parseInt(date[0], 10);
+            const actualYear = parseInt(date[0], 10);
 
             if (actualYear < validYear) {
               return null;
@@ -98,19 +99,36 @@ export class AppComponent {
     };
 
     this.actions['alert'] = (property, options) => {
+      property.forEachChildRecursive(child => {
+        console.log(child.valid, child);
+      });
       alert(JSON.stringify(property.value));
     };
 
     this.actions['reset'] = (form, options) => {
       form.reset();
     };
-
-    this.actions['addItem'] = (property, parameters) => {
-      property.addItem(parameters.value);
+    this.actions['reset'] = (form, options) => {
+      form.reset();
     };
+    this.actions['disable'] = this.disableAll.bind(this);
+  }
+
+  logErrors(errors) {
+    console.log('ERRORS', errors);
   }
 
   changeSchema() {
     this.schema = require('./otherschema.json');
+  }
+
+  disableAll() {
+    Object.keys(this.schema.properties).map(prop => {
+      this.schema.properties[prop].readOnly = true;
+    });
+  }
+
+  setValue(value) {
+    this.value = value;
   }
 }

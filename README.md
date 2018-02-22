@@ -79,7 +79,7 @@ import { AppComponent } from "./app.component";
 
 @NgModule({
   imports: [
-    SchemaFormModule,
+    SchemaFormModule.forRoot(),
     BrowserModule
   ],
   declarations: [AppComponent],
@@ -193,7 +193,7 @@ mySchema = {
 
 ### Default widget's registry
 Available widgets are managed through a `WidgetRegistry`.
-The default registry ([`DefaultWidgetRegistry`](./src/schema-form/defaultwidgets/defaultwidgetregistry.ts)) contains many widgets listed below, ordered by type:
+The default registry ([`DefaultWidgetRegistry`](./src/defaultwidgets/defaultwidgetregistry.ts)) contains many widgets listed below, ordered by type:
 
 - **string**: string, search, tel, url, email, password, color, date, date-time, time, textarea, select, file, radio, richtext
 - **number**: number, integer, range
@@ -202,22 +202,35 @@ The default registry ([`DefaultWidgetRegistry`](./src/schema-form/defaultwidgets
 
 Note that the select and radio widgets rely on the `oneOf` property:
 
-```js
+```javascript
 "operatingSystem": {
   "type": "string",
-  "oneOf":[{
-    "enum": ["linux"],
-    "description": "GNU/Linux"
-  }, {
-    "enum": ["osx"],
-    "description": "OSX"
-  }, {
-    "enum": ["windows"],
-    "description": "Windows"
-  },{
-    "enum": ["other"],
-    "description": "Other"
-  }],
+  "oneOf": [
+    {
+      "enum": [
+        "linux"
+      ],
+      "description": "GNU/Linux"
+    },
+    {
+      "enum": [
+        "osx"
+      ],
+      "description": "OSX"
+    },
+    {
+      "enum": [
+        "windows"
+      ],
+      "description": "Windows"
+    },
+    {
+      "enum": [
+        "other"
+      ],
+      "description": "Other"
+    }
+  ],
   "default": "other"
 }
 ```
@@ -228,7 +241,7 @@ Each schema can be extended by adding buttons after its widget.
 ```js
 // app.component.ts
 @Component({
-  selector:"minimal-app",
+  selector: "minimal-app",
   // Bind the actions map to the the "actions" input
   template: '<sf-form [schema]="mySchema" [actions]="myActions"></sf-form>'
 })
@@ -244,10 +257,10 @@ export class AppComponent {
       "password": {
         "type": "string",
         "description": "Password",
-				"buttons": [{
-					"id": "reset",
-					"label": "Reset"
-				}]
+        "buttons": [{
+          "id": "reset",
+          "label": "Reset"
+        }]
       },
       "rememberMe": {
         "type": "boolean",
@@ -255,7 +268,7 @@ export class AppComponent {
         "description": "Remember me"
       }
     },
-    "required": ["email","password","rememberMe"],
+    "required": ["email", "password", "rememberMe"],
     "buttons": [{
       "id": "alert", // the id of the action callback
       "label": "Alert !" // the text inside the button
@@ -264,10 +277,89 @@ export class AppComponent {
 
   // Declare a mapping between action ids and their event listener
   myActions = {
-    "alert": (property) => {alert(JSON.stringify(property.value))},
-    "reset": (property) => {property.reset()}
+    "alert": (property) => { alert(JSON.stringify(property.value)) },
+    "reset": (property) => { property.reset() }
   }
 }
+```
+
+#### Render buttons
+
+You may define you own widget to create buttons by 
+overriding the default widget for action buttons
+or create completely customized button widgets.
+
+##### Override
+
+Override the default action button widget 
+in your `WidgetRegistry` implementation
+and register your own button widget.
+
+```js
+    this.register('button', MyButtonWidgetComponent);
+```
+
+##### Custom
+
+Define a custom button widget by 
+setting the property `button.widget` in the schema
+
+```json
+  "password": {
+    "type": "string",
+    "description": "Password",
+    "buttons": [
+      {
+        "id": "reset",
+        "label": "Reset"
+      },
+      {
+        "id": "custom_b",
+        "label": "My custom button",
+        "widget": "my_custom_button" // custom widget name for this button
+      }
+    ]
+  }
+``` 
+
+and then register it in your `WidgetRegistry` implementation
+
+```js
+    this.register('my_custom_button', MyCustomButtonWidgetComponent);
+```
+  
+##### Binding
+
+The button widget will get provided the `button` object form the schema
+including the `button.action` from the action registry 
+and the `formProperty` object.
+
+To be fully AOT compatible 
+the custom button widget may then extend `ButtonWidget` or 
+provide the properties `button` and `formProperty` by it self.
+
+```js
+  import {Component} from "@angular/core";
+  import {ButtonWidget} from 'angular2-schema-form/dist/defaultwidgets'
+  
+  @Component({
+    selector: 'sf-button-widget',
+    templateUrl: 'custom-button.widget.html'
+  })
+  export class CustomWidgetComponent extends ButtonWidget {
+  
+  }
+```
+
+```js
+  @Component({
+    selector: 'sf-button-widget',
+    templateUrl: 'custom-button.widget.html'
+  })
+  export class CustomWidgetComponent {
+    public button
+    public formProperty
+  }
 ```
 
 ### Advanced validation
@@ -281,7 +373,7 @@ To perform this check we create a custom validator:
 
 ```js
 @Component({
-  selector:"minimal-app",
+  selector: "minimal-app",
   // Bind the validator map to the the "validators" input
   template: '<sf-form [schema]="mySchema" [validators]="myValidators"></sf-form>'
 })
@@ -308,11 +400,8 @@ export class AppComponent {
   // Declare a mapping between action ids and their implementations
   myValidators = {
     "/passwordCheck": (value, property, form) => {
-      if (controls.password !== undefined
-          && controls.password.valid
-          && value !== values.password
-         ) {
-        return {"passwordCheck":{"expectedValue":"same as 'password'"}}
+      if (controls.password !== undefined && controls.password.valid && value !== values.password) {
+        return { "passwordCheck": { "expectedValue": "same as 'password'" } }
       }
       return null;
     }
@@ -327,7 +416,7 @@ Adding the value $ANY$ to the array of conditional values,will make the field vi
 
 ```js
 @Component({
-  selector:"minimal-app",
+  selector: "minimal-app",
   template: '<sf-form [schema]="mySchema"></sf-form>'
 })
 export class AppComponent {
@@ -345,9 +434,9 @@ export class AppComponent {
         "type": "boolean",
         "description": "I want to receive the newsletter",
         "default": false,
-         "visibleIf": {
-                  "comment": ['$ANY$']
-                }
+        "visibleIf": {
+          "comment": ['$ANY$']
+        }
       },
       "registerEmail": {
         "type": "string",
@@ -359,9 +448,51 @@ export class AppComponent {
         }
       }
     },
-    "required": ["name","comment","registerToNewsletter"]
+    "required": ["name", "comment", "registerToNewsletter"]
   }
 }
+```
+Assigning an empty Object to 'visibleIf' is interpreted as _visibleIf_ nothing, thereby the widget is hidden.
+```js
+mySchema = {
+    "properties": {
+      "hidden": {
+        "type": "boolean",
+        "visibleIf": { }
+      }
+    }
+  }
+```
+
+#### Hidden fields
+When a field has been made invisible by the condition `visibleIf`
+then the property of the invisible field will be missing in the result model.
+
+If there is need to submit default values that are not visible for the form
+the `widget.id` `hidden` might be the better choice
+```js
+  mySchema = {
+    "properties": {
+      "hiddenInput": {
+        "type": "boolean",
+        "widget": "hidden",
+        "default": true
+      },
+      "lastName": {
+        "type": "string",
+        ...
+      }
+    }
+  }
+```
+so the value of the hidden field will be bound to the output model
+
+```js
+  {
+    "hiddenInput": true,
+    "lastName": "Doe",
+    ...
+  }
 ```
 
 ### Fields presentation and ordering
@@ -388,30 +519,61 @@ With the `fieldsets` property, you can describe the different parts of the form 
 ```js
 {
   "properties": {
-    "firstName": {"type": "string","description": "First name"},
-      "lastName": {"type": "string","description": "Last name"},
-      "email": {"type": "string","description": "Email"},
-      "notificationsFrequency": {
-        "type":"string",
-        "description": "Notifications frequency",
-        "widget": "select",
-        "oneOf": [{
-          "description": "Daily", "enum": ["daily"]
-        }, {
-          "description": "Weekly", "enum": ["weekly"]
-        }, {
-          "description": "Monthly", "enum": ["monthly"]
-        }],
-        "default": "daily"
-      }
+    "firstName": {
+      "type": "string",
+      "description": "First name"
+    },
+    "lastName": {
+      "type": "string",
+      "description": "Last name"
+    },
+    "email": {
+      "type": "string",
+      "description": "Email"
+    },
+    "notificationsFrequency": {
+      "type": "string",
+      "description": "Notifications frequency",
+      "widget": "select",
+      "oneOf": [
+        {
+          "description": "Daily",
+          "enum": [
+            "daily"
+          ]
+        },
+        {
+          "description": "Weekly",
+          "enum": [
+            "weekly"
+          ]
+        },
+        {
+          "description": "Monthly",
+          "enum": [
+            "monthly"
+          ]
+        }
+      ],
+      "default": "daily"
+    }
   },
-  "fieldsets": [{
-    "title": "Personal information",
-    "fields": ["firstName", "lastName", "email"]
-  }, {
-    "title": "Account settings",
-    "fields": ["notificationsFrequency"]
-  }]
+  "fieldsets": [
+    {
+      "title": "Personal information",
+      "fields": [
+        "firstName",
+        "lastName",
+        "email"
+      ]
+    },
+    {
+      "title": "Account settings",
+      "fields": [
+        "notificationsFrequency"
+      ]
+    }
+  ]
 }
 ```
 
@@ -428,26 +590,26 @@ If it is not formatted the way Angular 2 Schema Form expects or if some elements
   template: '<sf-form [schema]="schema" [model]="model" [actions]="actions"></sf-form>'
 })
 export class MyComponent {
-  private schema:any =
+  private schema: any = {
     'properties': {}
   };
-  private actions:any = {};
-  private model:any = {};
+  private actions: any = {};
+  private model: any = {};
 
   constructor(private http: Http) { }
 
   ngOnInit() {
-      this.http.get('http://mybackend/schema').subscribe(res => {
-        let schema = res.json();
+    this.http.get('http://mybackend/schema').subscribe(res => {
+      let schema = res.json();
 
-        // FIXES
-        // the "description" field must be rendered with tinymce
-        schema.properties.description.widget = 'tinymce'
+      // FIXES
+      // the "description" field must be rendered with tinymce
+      schema.properties.description.widget = 'tinymce'
 
-        // the "publication" field is required
-        schema.required = ['publication'];
+      // the "publication" field is required
+      schema.required = ['publication'];
 
-        this.schema = schema;
+      this.schema = schema;
     });
   }
 }
@@ -489,8 +651,15 @@ export class MyWidgetRegistry extends DefaultWidgetRegistry {
 }
 ```
 
-And then you need to provide your registry in your module:
+And, in your module, you need to:
+
+- declare your widget component (like any regular component),
+- declare it as an entry components (it means it can be instanciated dynamically),
+- and provide your registry.
+
 ```javascript
+declarations: [MyStringWidget],
+entryComponents: [MyStringWidget],
 providers: [{provide: WidgetRegistry, useClass: MyWidgetRegistry}],
 ```
 
@@ -504,6 +673,7 @@ import { ReactiveFormsModule } from '@angular/forms';
     ...
     ReactiveFormsModule,
   ]
+})
 ```
 
 ## Development and build
@@ -533,7 +703,7 @@ npm install -g @angular/cli
 cd ./tests
 npm install
 cd ./src/app
-ln -s ../../../src/
+ln -s ../../../src/ lib
 cd -
 ng serve
 ```

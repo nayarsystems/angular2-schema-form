@@ -26,6 +26,53 @@ export class ObjectProperty extends PropertyGroup {
     this.updateValueAndValidity(onlySelf, true);
   }
 
+  addProperty(propertyId: string): boolean {
+    let newProperty = this.addProp(propertyId);
+    if (newProperty) {
+      newProperty.reset(null, false);
+      return true;
+    }
+    return false;
+  }
+
+  private addProp(propId: string) {
+    if (this.schema.additionalProperties) {
+      if (!(propId in this.properties)) {
+        if (this.schema.additionalProperties instanceof Boolean) {
+          let newProperty = this.formPropertyFactory.createProperty({type: 'string', widget: {id: 'string'}}, this, propId);
+          this.properties[propId] = newProperty;
+          this.propertiesId.push(propId);
+          return newProperty;
+        } else {
+          let sch = this.schema.additionalProperties;
+          sch["widget"] = {id: sch.type};
+          let newProperty = this.formPropertyFactory.createProperty(sch, this, propId);
+          this.properties[propId] = newProperty;
+          this.propertiesId.push(propId);
+          return newProperty;
+        }
+      }
+    }
+    return null;
+  }
+
+  delProperty(propertyId: string) {
+    this.delProp(propertyId);
+    this.updateValueAndValidity(false, true);
+  }
+
+  private delProp(propId: string) {
+    if (this.schema.additionalProperties) {
+      if (propId in this.properties) {
+        delete this.properties[propId];
+        let index: number = this.propertiesId.indexOf(propId);
+        if (index !== -1) {
+          this.propertiesId.splice(index, 1);
+        }
+      }
+    }
+  }
+
   reset(value: any, onlySelf = true) {
     value = value || this.schema.default || {};
     this.resetProperties(value);
@@ -45,8 +92,12 @@ export class ObjectProperty extends PropertyGroup {
     this.propertiesId = [];
     for (const propertyId in this.schema.properties) {
       if (this.schema.properties.hasOwnProperty(propertyId)) {
-        const propertySchema = this.schema.properties[propertyId];
-        this.properties[propertyId] = this.formPropertyFactory.createProperty(propertySchema, this, propertyId);
+        let propertySchema = this.schema.properties[propertyId];
+        if (!("widget" in propertySchema)) {
+            propertySchema["widget"] = { id: propertySchema.type };
+        }
+        let property = this.formPropertyFactory.createProperty(propertySchema, this, propertyId);
+        this.properties[propertyId] = property;
         this.propertiesId.push(propertyId);
       }
     }

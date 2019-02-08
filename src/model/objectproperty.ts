@@ -35,6 +35,10 @@ export class ObjectProperty extends PropertyGroup {
     return false;
   }
 
+  getPropertiesId(): string[] {
+    return this.propertiesId;
+  }
+
   private addProp(propId: string) {
     if (this.schema.additionalProperties) {
       if (!(propId in this.properties)) {

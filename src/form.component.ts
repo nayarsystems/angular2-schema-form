@@ -111,7 +111,7 @@ export class FormComponent implements OnChanges {
       });
     }
 
-    if (this.schema && (changes.model || changes.schema )) {
+    if (this.schema && ((changes.model && changes.model.firstChange) || changes.schema && changes.schema.firstChange )) {
       this.rootProperty.reset(this.model, false);
       this.cdr.detectChanges();
     }
